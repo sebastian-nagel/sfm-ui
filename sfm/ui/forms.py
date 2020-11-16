@@ -27,7 +27,9 @@ HISTORY_NOTE_WIDGET = forms.Textarea(attrs={'rows': 4})
 
 SCHEDULE_HELP = "How frequently you want data to be retrieved."
 INCREMENTAL_LABEL = "Incremental harvest"
+HARVEST_MEDIA_LABEL = "Harvest media"
 INCREMENTAL_HELP = "Only collect new items since the last data retrieval."
+HARVEST_MEDIA_HELP = "Harvest media URLs embedded in tweets."
 GROUP_HELP = "Your default group is your username, unless the SFM team has added you to another group."
 
 
@@ -168,12 +170,13 @@ class CollectionTwitterUserTimelineForm(BaseCollectionForm):
                                                                                         "for suspended accounts.")
     protected_accounts_options = forms.BooleanField(initial=False, required=False, label="Automatically delete seeds "
                                                                                          "for protected accounts.")
+    harvest_media = forms.BooleanField(initial=True, required=False, label=HARVEST_MEDIA_LABEL, help_text=HARVEST_MEDIA_HELP)
 
     def __init__(self, *args, **kwargs):
         super(CollectionTwitterUserTimelineForm, self).__init__(*args, **kwargs)
         self.helper.layout[0][5].extend(('incremental',
                                          'deleted_accounts_option', 'suspended_accounts_option',
-                                         'protected_accounts_options'))
+                                         'protected_accounts_options', 'harvest_media'))
 
         if self.instance and self.instance.harvest_options:
             harvest_options = json.loads(self.instance.harvest_options)
@@ -185,6 +188,8 @@ class CollectionTwitterUserTimelineForm(BaseCollectionForm):
                 self.fields['protected_accounts_options'].initial = harvest_options["deactivate_unauthorized_seeds"]
             if "deactivate_suspended_seeds" in harvest_options:
                 self.fields['suspended_accounts_option'].initial = harvest_options["deactivate_suspended_seeds"]
+            if "harvest_media" in harvest_options:
+                self.fields['harvest_media'].initial = harvest_options["harvest_media"]
 
     def save(self, commit=True):
         m = super(CollectionTwitterUserTimelineForm, self).save(commit=False)
@@ -193,7 +198,8 @@ class CollectionTwitterUserTimelineForm(BaseCollectionForm):
             "incremental": self.cleaned_data["incremental"],
             "deactivate_not_found_seeds": self.cleaned_data["deleted_accounts_option"],
             "deactivate_unauthorized_seeds": self.cleaned_data["protected_accounts_options"],
-            "deactivate_suspended_seeds": self.cleaned_data["suspended_accounts_option"]
+            "deactivate_suspended_seeds": self.cleaned_data["suspended_accounts_option"],
+            "harvest_media": self.cleaned_data["harvest_media"]
         }
         m.harvest_options = json.dumps(harvest_options, sort_keys=True)
         m.save()
