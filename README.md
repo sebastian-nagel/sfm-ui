@@ -29,7 +29,7 @@ Social Feed Manager allows users to:
 ## Repositories
 The full Social Feed Manager is made up of several component repositories:
 
-* [sfm-ui](https://github.com/gwu-libraries/sfm-ui): (this repo) User interface and datastore for collection and harvest information. 
+* [sfm-ui](https://github.com/gwu-libraries/sfm-ui): (this repo) User interface and datastore for collection and harvest information.
 * [sfm-flickr-harvester](https://github.com/gwu-libraries/sfm-flickr-harvester):  A harvester for Flickr.
 * [sfm-twitter-harvester](https://github.com/gwu-libraries/sfm-twitter-harvester): A harvester for Twitter.
 * [sfm-weibo-harvester](https://github.com/gwu-libraries/sfm-weibo-harvester):   A harvester for Sina Weibo.
