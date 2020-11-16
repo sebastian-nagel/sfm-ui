@@ -107,6 +107,7 @@ These instructions are for Ubuntu. They may need to be adjusted for other operat
 3. Set ownership::
 
         sudo chown -R 990:990 /sfm-data/*
+        sudo chown -R 999:999 /sfm-data/postgresql/
         
 4. Change .env::
 
