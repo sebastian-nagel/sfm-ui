@@ -27,9 +27,9 @@ HISTORY_NOTE_WIDGET = forms.Textarea(attrs={'rows': 4})
 
 SCHEDULE_HELP = "How frequently you want data to be retrieved."
 INCREMENTAL_LABEL = "Incremental harvest"
-HARVEST_MEDIA_LABEL = "Harvest media"
 INCREMENTAL_HELP = "Only collect new items since the last data retrieval."
-HARVEST_MEDIA_HELP = "Harvest media URLs embedded in tweets."
+HARVEST_MEDIA_LABEL = "Harvest media"
+HARVEST_MEDIA_HELP = "Harvest media URLs embedded in tweets or posts."
 GROUP_HELP = "Your default group is your username, unless the SFM team has added you to another group."
 
 
@@ -284,21 +284,25 @@ class CollectionFlickrUserForm(BaseCollectionForm):
 
 class CollectionFacebookUserTimelineForm(BaseCollectionForm):
     incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
+    harvest_media = forms.BooleanField(initial=True, required=False, label=HARVEST_MEDIA_LABEL, help_text=HARVEST_MEDIA_HELP)
 
     def __init__(self, *args, **kwargs):
         super(CollectionFacebookUserTimelineForm, self).__init__(*args, **kwargs)
-        self.helper.layout[0][5].extend(('incremental',))
+        self.helper.layout[0][5].extend(('incremental', 'harvest_media'))
 
         if self.instance and self.instance.harvest_options:
             harvest_options = json.loads(self.instance.harvest_options)
             if "incremental" in harvest_options:
                 self.field['incremental'].initial = harvest_options["incremental"]
+            if "harvest_media" in harvest_options:
+                self.fields['harvest_media'].initial = harvest_options["harvest_media"]
 
     def save(self, commit=True):
         m = super(CollectionFacebookUserTimelineForm, self).save(commit=False)
         m.harvest_type = Collection.FACEBOOK_USER_TIMELINE
         harvest_options = {
-            "incremental": self.cleaned_data["incremental"]
+            "incremental": self.cleaned_data["incremental"],
+            "harvest_media": self.cleaned_data["harvest_media"]
         }
         m.harvest_options = json.dumps(harvest_options, sort_keys=True)
         m.save()
