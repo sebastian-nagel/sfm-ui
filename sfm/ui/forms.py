@@ -293,7 +293,7 @@ class CollectionFacebookUserTimelineForm(BaseCollectionForm):
         if self.instance and self.instance.harvest_options:
             harvest_options = json.loads(self.instance.harvest_options)
             if "incremental" in harvest_options:
-                self.field['incremental'].initial = harvest_options["incremental"]
+                self.fields['incremental'].initial = harvest_options["incremental"]
             if "harvest_media" in harvest_options:
                 self.fields['harvest_media'].initial = harvest_options["harvest_media"]
 
@@ -319,7 +319,7 @@ class CollectionFacebookUserBioForm(BaseCollectionForm):
         if self.instance and self.instance.harvest_options:
             harvest_options = json.loads(self.instance.harvest_options)
             if "incremental" in harvest_options:
-                self.field['incremental'].initial = harvest_options['incremental']
+                self.fields['incremental'].initial = harvest_options['incremental']
 
     def save(self, commit=True):
         m = super(CollectionFacebookUserBioForm, self).save(commit=False)
@@ -342,7 +342,7 @@ class CollectionFacebookUserAdsForm(BaseCollectionForm):
             if self.instance and self.instance.harvest_options:
                 harvest_options = json.loads(self.instance.harvest_options)
                 if "incremental" in harvest_options:
-                    self.field['incremental'].initial = harvest_options['incremental']
+                    self.fields['incremental'].initial = harvest_options['incremental']
 
         def save(self, commit=True):
             m = super(CollectionFacebookUserAdsForm, self).save(commit=False)
