@@ -1048,19 +1048,25 @@ class CredentialFacebookForm(BaseCredentialForm):
     """Credentials forCredentialFacebookForm - not strictly needed for scraping
     procedures, but necessary for calling Ads API."""
 
-    access_token_fb = forms.CharField(required=True)
+
+    user_email_fb = forms.CharField(required=True, help_text = "Email used to login to Facebook (should be a test account) - this will be send as plain text to the harvester!")
+    user_password_fb = forms.CharField(required=True,  help_text = "Password used to login to Facebook (should be a test account) - this will be send as plain text to the harvester!")
+
+    # access_token_fb = forms.CharField(required=True)
 
     def __init__(self, *args, **kwargs):
         super(CredentialFacebookForm, self).__init__(*args, **kwargs)
-        self.helper.layout[0][1].extend(['access_token_fb'])
+        self.helper.layout[0][1].extend(['user_email_fb', 'user_password_fb'])
 
         if self.instance and self.instance.token:
             token = json.loads(self.instance.token)
-            self.fields['access_token_fb'].initial = token.get('access_token_fb')
+            self.fields['user_email_fb'].initial = token.get('user_email_fb')
+            self.fields['user_password_fb'].initial = token.get('user_password_fb')
 
     def to_token(self):
         return {
-            "access_token_fb": self.cleaned_data.get("access_token_fb", "").strip(),
+            "user_email_fb": self.cleaned_data.get("user_email_fb", "").strip(),
+            "user_password_fb": self.cleaned_data.get("user_password_fb", "").strip()
         }
 
     def save(self, commit=True):
