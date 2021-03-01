@@ -424,6 +424,33 @@ class CollectionTumblrBlogPostsForm(BaseCollectionForm):
         return m
 
 
+class CollectionWebCrawlBrowsertrixForm(BaseCollectionForm):
+        incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
+        browsertrix_args = forms.CharField(help_text='Arguments passed to Browsertrix crawler')
+
+        def __init__(self, *args, **kwargs):
+            super(CollectionWebCrawlBrowsertrixForm, self).__init__(*args, **kwargs)
+            self.helper.layout[0][5].extend(('incremental', 'browsertrix_args'))
+
+            if self.instance and self.instance.harvest_options:
+                harvest_options = json.loads(self.instance.harvest_options)
+                if "incremental" in harvest_options:
+                    self.fields['incremental'].initial = harvest_options['incremental']
+                if "browsertrix_args" in harvest_options:
+                    self.fields['browsertrix_args'].initial = harvest_options['browsertrix_args']
+
+        def save(self, commit=True):
+            m = super(CollectionWebCrawlBrowsertrixForm, self).save(commit=False)
+            m.harvest_type = Collection.WEB_CRAWL_BROWSERTRIX
+            harvest_options = {
+                "incremental": self.cleaned_data["incremental"],
+                "browsertrix_args": self.cleaned_data["browsertrix_args"]
+            }
+            m.harvest_options = json.dumps(harvest_options, sort_keys=True)
+            m.save()
+            return m
+
+
 class BaseSeedForm(forms.ModelForm):
     class Meta:
         model = Seed
@@ -856,6 +883,24 @@ class SeedFacebookUserBioForm(BaseSeedForm):
         self.helper.layout[0][0].extend(('token', 'uid'))
 
 
+class SeedWebCrawlBrowsertrixForm(BaseSeedForm):
+    class Meta(BaseSeedForm.Meta):
+        fields = ['token']
+        fields.extend(BaseSeedForm.Meta.fields)
+        labels = dict(BaseSeedForm.Meta.labels)
+        labels['token'] = 'Seed URL to start browsertrix crawl from'
+        help_texts = dict(BaseSeedForm.Meta.help_texts)
+        help_texts['token'] = 'A valid URL also used as URL prefix if ' \
+                              'no scope is provided in the browsertrix arguments'
+        widgets = dict(BaseSeedForm.Meta.widgets)
+        #widgets['token'] = forms.URLInput()
+        widgets['token'] = forms.TextInput(attrs={'size': '80'})
+
+    def __init__(self, *args, **kwargs):
+        super(SeedWebCrawlBrowsertrixForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][0].append(('token'))
+
+
 class BaseBulkSeedForm(forms.Form):
     TYPES = (('token', 'Username'), ('uid', 'NSID'))
     seeds_type = forms.ChoiceField(required=True, choices=TYPES, widget=forms.RadioSelect)
@@ -983,6 +1028,20 @@ class BaseCredentialForm(forms.ModelForm):
             if Credential.objects.filter(token=token).exists():
                 raise ValidationError(u'This is a duplicate of an existing credential!')
         return cleaned_data
+
+
+class CredentialWebForm(BaseCredentialForm):
+    """Credentials for accessing the web - so far, no authentication supported"""
+
+    def to_token(self):
+        return {}
+
+    def save(self, commit=True):
+        m = super(CredentialWebForm, self).save(commit=False)
+        m.platform = Credential.WEB
+        m.token = json.dumps(self.to_token())
+        m.save()
+        return m
 
 
 class CredentialFlickrForm(BaseCredentialForm):
