@@ -354,6 +354,28 @@ class CollectionFacebookUserAdsForm(BaseCollectionForm):
             m.save()
             return m
 
+class CollectionInstagramUserTimelineForm(BaseCollectionForm):
+    incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
+
+    def __init__(self, *args, **kwargs):
+        super(CollectionInstagramUserTimelineForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][5].extend(('incremental',))
+
+        if self.instance and self.instance.harvest_options:
+            harvest_options = json.loads(self.instance.harvest_options)
+            if "incremental" in harvest_options:
+                self.field['incremental'].initial = harvest_options["incremental"]
+
+    def save(self, commit=True):
+        m = super(CollectionInstagramUserTimelineForm, self).save(commit=False)
+        m.harvest_type = Collection.INSTAGRAM_USER_TIMELINE
+        harvest_options = {
+            "incremental": self.cleaned_data["incremental"]
+        }
+        m.harvest_options = json.dumps(harvest_options, sort_keys=True)
+        m.save()
+        return m
+
 
 class CollectionWeiboTimelineForm(BaseCollectionForm):
     incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
@@ -882,6 +904,26 @@ class SeedFacebookUserBioForm(BaseSeedForm):
         super(SeedFacebookUserBioForm, self).__init__(*args, **kwargs)
         self.helper.layout[0][0].extend(('token', 'uid'))
 
+class SeedInstagramUserTimelineForm(BaseSeedForm):
+    class Meta(BaseSeedForm.Meta):
+        fields = ['token', 'uid']
+        fields.extend(BaseSeedForm.Meta.fields)
+        labels = dict(BaseSeedForm.Meta.labels)
+        labels["token"] = "Instagram username"
+        labels["uid"] = "Unique Instagram id - not compulsory"
+        help_texts = dict(BaseSeedForm.Meta.help_texts)
+        help_texts["token"] = "A string name for the user account. This can simply be copied " \
+                                "as the url directing to the account's main page"
+        help_texts["uid"] = 'Provide the unique instagram id'
+
+        widgets = dict(BaseSeedForm.Meta.widgets)
+        widgets["token"] = forms.TextInput(attrs={'size': '60'})
+        widgets["uid"] = forms.TextInput(attrs={'size': '50'})
+
+    def __init__(self, *args, **kwargs):
+        super(SeedInstagramUserTimelineForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][0].extend(('token', 'uid'))
+
 
 class SeedWebCrawlBrowsertrixForm(BaseSeedForm):
     class Meta(BaseSeedForm.Meta):
@@ -1104,7 +1146,7 @@ class CredentialTwitterForm(BaseCredentialForm):
 
 
 class CredentialFacebookForm(BaseCredentialForm):
-    """Credentials forCredentialFacebookForm - not strictly needed for scraping
+    """Credentials for CredentialFacebookForm - not strictly needed for scraping
     procedures, but necessary for calling Ads API."""
 
 
@@ -1131,6 +1173,37 @@ class CredentialFacebookForm(BaseCredentialForm):
     def save(self, commit=True):
         m = super(CredentialFacebookForm, self).save(commit=False)
         m.platform = Credential.FACEBOOK
+        m.token = json.dumps(self.to_token())
+        m.save()
+        return m
+
+class CredentialInstagramForm(BaseCredentialForm):
+    """Credentials for CredentialInstagramForm - strictly needed for scraping procedures"""
+
+
+    user_email_ins = forms.CharField(required=True, help_text = "Email used to login to Instagram (should be a test account) - this will be send as plain text to the harvester!")
+    user_password_ins = forms.CharField(required=True,  help_text = "Password used to login to Instagram (should be a test account) - this will be send as plain text to the harvester!")
+
+    # access_token_fb = forms.CharField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        super(CredentialInstagramForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][1].extend(['user_email_ins', 'user_password_ins'])
+
+        if self.instance and self.instance.token:
+            token = json.loads(self.instance.token)
+            self.fields['user_email_ins'].initial = token.get('user_email_ins')
+            self.fields['user_password_ins'].initial = token.get('user_password_ins')
+
+    def to_token(self):
+        return {
+            "user_email_ins": self.cleaned_data.get("user_email_ins", "").strip(),
+            "user_password_ins": self.cleaned_data.get("user_password_ins", "").strip()
+        }
+
+    def save(self, commit=True):
+        m = super(CredentialInstagramForm, self).save(commit=False)
+        m.platform = Credential.INSTAGRAM
         m.token = json.dumps(self.to_token())
         m.save()
         return m

@@ -109,6 +109,7 @@ class Credential(models.Model):
     WEIBO = "weibo"
     TUMBLR = "tumblr"
     FACEBOOK = "facebook"
+    INSTAGRAM = "instagram"
     WEB = "web"
     PLATFORM_CHOICES = [
         (TWITTER, 'Twitter'),
@@ -116,6 +117,7 @@ class Credential(models.Model):
         (WEIBO, 'Weibo'),
         (TUMBLR, "Tumblr"),
         (FACEBOOK, "Facebook"),
+        (INSTAGRAM, "Instagram"),
         (WEB, "web")
     ]
     credential_id = models.CharField(max_length=32, unique=True, default=default_uuid)
@@ -308,6 +310,7 @@ class Collection(models.Model):
     FACEBOOK_USER_TIMELINE = 'facebook_user_timeline'
     FACEBOOK_USER_BIO = 'facebook_user_bio'
     FACEBOOK_USER_ADS = 'facebook_user_ads'
+    INSTAGRAM_USER_TIMELINE = 'instagram_user_timeline'
     WEB_CRAWL_BROWSERTRIX = 'web_crawl_browsertrix'
     SCHEDULE_CHOICES = [
         (1, 'One time harvest'),
@@ -330,6 +333,7 @@ class Collection(models.Model):
         (FACEBOOK_USER_TIMELINE, 'Facebook timeline'),
         (FACEBOOK_USER_BIO, 'Facebook info/bio'),
         (FACEBOOK_USER_ADS, 'Political Facebook ads by user'),
+        (INSTAGRAM_USER_TIMELINE, "Instagram timeline of user"),
         (WEB_CRAWL_BROWSERTRIX, 'Web crawl by browsertrix')
     ]
     HARVEST_DESCRIPTION = {
@@ -343,6 +347,7 @@ class Collection(models.Model):
         FACEBOOK_USER_TIMELINE: 'Posts from a public page',
         FACEBOOK_USER_BIO: 'Scrapes info tab of a public page',
         FACEBOOK_USER_ADS: 'Political Facebook User Ads',
+        INSTAGRAM_USER_TIMELINE: 'Instagram timeline of user',
         WEB_CRAWL_BROWSERTRIX: 'Web pages crawled by the browsertrix-crawler ' \
                            '(https://github.com/webrecorder/browsertrix-crawler)'
     }
@@ -357,6 +362,7 @@ class Collection(models.Model):
         FACEBOOK_USER_TIMELINE: {"link": "Link", "token": "Facebook accounts", "uid": "User ID"},
         FACEBOOK_USER_BIO: {"link": "Link", "token": "Facebook accounts", "uid": "User ID"},
         FACEBOOK_USER_ADS: {"link": "Link", "token": "Facebook accounts", "uid": "User ID"},
+        INSTAGRAM_USER_TIMELINE: {"link": "Link", "token": "Instagram accounts", "uid": "User ID"},
         WEB_CRAWL_BROWSERTRIX: {"link": "Seed URL", "token": None, "uid": None}
     }
     REQUIRED_SEED_COUNTS = {
@@ -368,6 +374,7 @@ class Collection(models.Model):
         FACEBOOK_USER_TIMELINE: 1,
         FACEBOOK_USER_BIO: 1,
         FACEBOOK_USER_ADS: 1,
+        INSTAGRAM_USER_TIMELINE: 1,
         WEB_CRAWL_BROWSERTRIX: 1
     }
 
@@ -383,6 +390,7 @@ class Collection(models.Model):
         FACEBOOK_USER_TIMELINE: Credential.FACEBOOK,
         FACEBOOK_USER_BIO: Credential.FACEBOOK,
         FACEBOOK_USER_ADS: Credential.FACEBOOK,
+        INSTAGRAM_USER_TIMELINE: Credential.INSTAGRAM,
         WEB_CRAWL_BROWSERTRIX: Credential.WEB
     }
     STREAMING_HARVEST_TYPES = (TWITTER_SAMPLE, TWITTER_FILTER)
@@ -596,6 +604,7 @@ class Seed(models.Model):
         tumblr_blog_url = '.tumblr.com'
         weibo_topic_url = 'http://huati.weibo.com/k/'
         facebook_user_url = 'https://www.facebook.com/'
+        instagram_user_url = 'https://www.instagram.com/'
         if self.collection.harvest_type == Collection.TWITTER_USER_TIMELINE and self.token:
             return twitter_user_url + self.token
         elif self.collection.harvest_type == Collection.FLICKR_USER and self.token:
@@ -608,6 +617,8 @@ class Seed(models.Model):
               or self.collection.harvest_type == Collection.FACEBOOK_USER_BIO
               or self.collection.harvest_type == Collection.FACEBOOK_USER_ADS
               or self.collection.harvest_type == Collection.WEB_CRAWL_BROWSERTRIX) and self.token:
+            return self.token
+        elif self.collection.harvest_type == Collection.INSTAGRAM_USER_TIMELINE and self.token:
             return self.token
         return None
 
