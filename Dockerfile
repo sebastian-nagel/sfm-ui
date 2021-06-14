@@ -6,9 +6,9 @@ RUN apt-get update && apt-get install -y \
     apache2=2.4* \
     apache2-dev=2.4*
 
-ADD . /opt/sfm-ui/
-WORKDIR /opt/sfm-ui
-RUN pip install -r requirements/common.txt -r requirements/release.txt
+# Install requirements
+ADD requirements /tmp/requirements
+RUN pip install -r /tmp/requirements/common.txt -r /tmp/requirements/release.txt
 
 # Adds fixtures.
 ADD docker/ui/fixtures.json /opt/sfm-setup/
@@ -42,5 +42,8 @@ ENV DJANGO_SETTINGS_MODULE=sfm.settings.docker_settings
 ENV LOAD_FIXTURES=false
 EXPOSE 80
 STOPSIGNAL SIGWINCH
+
+# Add sfm-ui Python classes
+ADD sfm /opt/sfm-ui/sfm
 
 CMD ["/opt/sfm-setup/invoke.sh"]
